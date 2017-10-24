@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#cecece"
+    android:id="@+id/root_view"
     tools:context="com.huxq17.example.floatball.MainActivity">
 
 
@@ -12,4 +13,5 @@
         android:layout_height="wrap_content"
         android:onClick="changeOrientation"
         android:text="横竖屏切换" />
+
 </RelativeLayout>

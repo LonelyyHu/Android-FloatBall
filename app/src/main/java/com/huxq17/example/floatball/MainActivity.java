@@ -6,10 +6,13 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
     private FloatBall mFloatBall;
+
+    FloatView2 floatView2;
 
     public void changeOrientation(View v) {
         if (Utils.isScreenOriatationPortrait(this)) {
@@ -19,10 +22,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    private void showFloatBallWithMenu() {
         FloatBallMenu menu = new FloatBallMenu();
         FloatBall.SingleIcon singleIcon = new FloatBall.SingleIcon(R.drawable.floatball2, 1f, 0.3f);
         FloatBall.DoubleIcon doubleIcon = new FloatBall.DoubleIcon(R.drawable.floatball2, R.drawable.floatball1);
@@ -44,10 +44,56 @@ public class MainActivity extends Activity {
         mFloatBall.setLayoutGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
     }
 
+    private void showFloatView(){
+        FloatView floatView = new FloatView.Builder(this, (ViewGroup) findViewById(R.id.root_view))
+                .setBottomMargin(90)
+                .setRightMargin(90)
+                .setHeight(200)
+                .setWidth(200)
+                .setDuration(500)
+                .setRes(R.drawable.floatball1)
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Toast.makeText(MainActivity.this, "On Click", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .build();
+    }
+
+    private void showFloatView2(){
+        floatView2 = new FloatView2.Builder(this, (ViewGroup) findViewById(R.id.root_view))
+                .setBottomMargin(90)
+                .setRightMargin(90)
+                .setHeight(200)
+                .setWidth(200)
+                .setDuration(500)
+                .setRes(R.drawable.floatball1)
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Toast.makeText(MainActivity.this, "On Click", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .build();
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        showFloatView2();
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
-        show();
+//        show();
+
+
+        floatView2.show();
+
     }
 
     @Override
@@ -63,7 +109,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        dismiss();
+//        dismiss();
     }
 
     private void dismiss() {
