@@ -3,6 +3,7 @@ package com.huxq17.example.floatball;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.os.Build;
 import android.support.v4.view.ViewCompat;
 import android.util.DisplayMetrics;
@@ -12,6 +13,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
@@ -154,13 +156,21 @@ public class FloatView2 implements View.OnTouchListener {
                 } else {
                     mLayoutParams.x = 0;
                 }
+
                 mLayoutParams.y = (int)(touchY-downRelativeY);
+                if (mLayoutParams.y < 0) {
+                    mLayoutParams.y = 0;
+                }
 
                 mWindowManager.updateViewLayout(ball, mLayoutParams);
                 break;
             case MotionEvent.ACTION_MOVE:
                 mLayoutParams.x = (int)(touchX-downRelativeX);
                 mLayoutParams.y = (int)(touchY-downRelativeY);
+
+                if (mLayoutParams.y < 0) {
+                    mLayoutParams.y = 0;
+                }
 
 //                mLayoutParams.x = 0;
 //                mLayoutParams.y = 100;
@@ -172,7 +182,24 @@ public class FloatView2 implements View.OnTouchListener {
                 break;
         }
 
+        Log.wtf("FloatView2", "getTopStatusBarHeight: " + getTopStatusBarHeight());
+
         return true;
+    }
+
+    private int getTopStatusBarHeight () {
+//        Rect rectangle = new Rect();
+//        Window window = ac.getWindow();
+//        window.getDecorView().getWindowVisibleDisplayFrame(rectangle);
+//        return rectangle.top;
+
+        int result = 0;
+        int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = context.getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
+
     }
 
     public static class Builder {
