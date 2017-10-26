@@ -6,6 +6,7 @@ import android.graphics.PixelFormat;
 import android.os.Build;
 import android.support.v4.view.ViewCompat;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -27,7 +28,7 @@ public class FloatView2 implements View.OnTouchListener {
     private float mLastX;
     private float mLastY;
     private boolean isHiddenWhenExit = false;
-    private int mLayoutGravity = Gravity.RIGHT | Gravity.CENTER_VERTICAL;
+    private int mLayoutGravity = Gravity.LEFT | Gravity.TOP;
     private boolean isAdded;
 
     private FadeOutRunnable mFadeOutRunnable = new FadeOutRunnable();
@@ -42,11 +43,10 @@ public class FloatView2 implements View.OnTouchListener {
     private View ball;
     private int maxMarginLeft;
     private int maxMarginTop;
-    private int downX;
-    private int downY;
-    private int xDelta;
-    private int yDelta;
-    private DisplayMetrics dm;
+    private float downRelativeX;
+    private float downRelativeY;
+    private int screenWidth;
+    private int screenHeight;
 
     public FloatView2(Params params) {
         this.params = params;
@@ -104,6 +104,8 @@ public class FloatView2 implements View.OnTouchListener {
         mLayoutParams.gravity = mLayoutGravity;
         mLayoutParams.width = params.width;
         mLayoutParams.height = params.height;
+        mLayoutParams.x=0;
+        mLayoutParams.y=0;
     }
 
     private void init() {
@@ -120,104 +122,55 @@ public class FloatView2 implements View.OnTouchListener {
         ball.setBackgroundColor(Color.RED);
 
         ball.setOnTouchListener(this);
-        ViewCompat.setElevation(ball, MAX_ELEVATION);
 
-        dm = context.getResources().getDisplayMetrics();
-        int screenWidth = dm.widthPixels;
-        int screenHeight = dm.heightPixels;
+        DisplayMetrics dm = context.getResources().getDisplayMetrics();
+        screenWidth = dm.widthPixels;
+        screenHeight = dm.heightPixels;
 
-//        ViewGroup.MarginLayoutParams layoutParams;
-//        layoutParams = new ViewGroup.MarginLayoutParams(params.width, params.height);
-//        maxMarginLeft = screenWidth - params.width;
-//        layoutParams.width = params.width;
-//        layoutParams.height = params.height;
-//        layoutParams.leftMargin = maxMarginLeft - params.rightMargin;
-//        maxMarginTop = screenHeight - params.height - (int) (context.getResources().getDisplayMetrics().density * TOP_STATUS_BAR_HEIGHT);
-//        layoutParams.topMargin = maxMarginTop - params.bottomMargin;
-//        layoutParams.bottomMargin = 0;
-//        layoutParams.rightMargin = 0;
-//
-//        ball.setLayoutParams(layoutParams);
+//        ViewCompat.setElevation(ball, MAX_ELEVATION);
+
     }
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
+
+        Log.wtf("FloatView2", "onTouch => RawX: " + event.getRawX());
+        Log.wtf("FloatView2", "onTouch => RawY: " + event.getRawX());
+        Log.wtf("FloatView2", "onTouch => X: " + event.getX());
+        Log.wtf("FloatView2", "onTouch => Y: " + event.getY());
+
+
         final int touchX = (int) event.getRawX();
         final int touchY = (int) event.getRawY();
         switch (event.getAction() & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN:
-                downX = touchX;
-                downY = touchY;
-                ViewGroup.MarginLayoutParams lParams = (ViewGroup.MarginLayoutParams) ball.getLayoutParams();
-                xDelta = touchX - lParams.leftMargin;
-                yDelta = touchY - lParams.topMargin;
+                downRelativeX = event.getX();
+                downRelativeY = event.getY();
+
                 break;
             case MotionEvent.ACTION_UP:
-                if (downX == touchX && downY == touchY) {
-                    if (params.onClickListener != null) {
-                        params.onClickListener.onClick(ball);
-                    }
+                if ((touchX+params.width/2) > screenWidth/2) {
+                    mLayoutParams.x = screenWidth - params.width;
                 } else {
-                    Animation animation = new Animation() {
-                        @Override
-                        protected void applyTransformation(float interpolatedTime, Transformation t) {
-                            ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) ball
-                                    .getLayoutParams();
-
-                            int curLeftMargin = layoutParams.leftMargin;
-
-                            if (touchX < dm.widthPixels / 2) {
-                                layoutParams.leftMargin = (int) (curLeftMargin - curLeftMargin * interpolatedTime);
-                            } else {
-                                layoutParams.leftMargin = (int) (curLeftMargin + (maxMarginLeft - curLeftMargin) * interpolatedTime);
-                            }
-
-                            ball.setLayoutParams(layoutParams);
-                        }
-                    };
-                    animation.setDuration(params.duration);
-                    ball.startAnimation(animation);
+                    mLayoutParams.x = 0;
                 }
+                mLayoutParams.y = (int)(touchY-downRelativeY);
 
-                break;
-            case MotionEvent.ACTION_POINTER_DOWN:
-                break;
-            case MotionEvent.ACTION_POINTER_UP:
+                mWindowManager.updateViewLayout(ball, mLayoutParams);
                 break;
             case MotionEvent.ACTION_MOVE:
-                ViewGroup.MarginLayoutParams layoutParams;
-                layoutParams = (ViewGroup.MarginLayoutParams) ball.getLayoutParams();
+                mLayoutParams.x = (int)(touchX-downRelativeX);
+                mLayoutParams.y = (int)(touchY-downRelativeY);
 
-                int leftMargin;
+//                mLayoutParams.x = 0;
+//                mLayoutParams.y = 100;
 
-                if (touchX - xDelta <= 0) {
-                    leftMargin = 0;
-                } else if (touchX - xDelta < maxMarginLeft) {
-                    leftMargin = touchX - xDelta;
-                } else {
-                    leftMargin = maxMarginLeft;
-                }
+                Log.wtf("FloatView2", "onTouch => mLayoutParams.x: " + mLayoutParams.x);
+                Log.wtf("FloatView2", "onTouch => mLayoutParams.y: " + mLayoutParams.y);
 
-                layoutParams.leftMargin = leftMargin;
-
-                int topMargin;
-
-                if (touchY - yDelta <= 0) {
-                    topMargin = 0;
-                } else if (touchY - yDelta < maxMarginTop) {
-                    topMargin = touchY - yDelta;
-                } else {
-                    topMargin = maxMarginTop;
-                }
-
-                layoutParams.topMargin = topMargin;
-                layoutParams.rightMargin = 0;
-                layoutParams.bottomMargin = 0;
-                ball.setLayoutParams(layoutParams);
+                mWindowManager.updateViewLayout(ball, mLayoutParams);
                 break;
         }
-
-        ball.getRootView().invalidate();
 
         return true;
     }
